@@ -7,6 +7,13 @@
 
 # This script must be run as 'root' (e.g. via 'sudo')
 
+SCRIPT_NAME=`basename $0` # Works unless symlinked
+EFFECTIVE_USER=`echo "$(whoami)"`
+if [ $EFFECTIVE_USER != 'root' ]; then
+  echo "${SCRIPT_NAME}: This script must be run as root (e.g. via 'sudo') ..."
+  exit 1
+fi
+
 # Verify that the 'puppet' executable file exists
 # and is in the current PATH.
 
@@ -41,13 +48,13 @@ if [ ! `command -v ${WGET_EXECUTABLE}` ]; then
   exit 1
 fi
 
-# Verify whether the 'apt-get' or 'yum' executable files
-# exist and are in the current PATH.
+# Verify whether the 'apt-get' or 'yum' package manager
+# executable files exist and are in the current PATH.
 
 APT_GET_EXECUTABLE='apt-get'
-APT_GET_EXECUTABLE_PRESENT=`command -v ${APT_GET_EXECUTABLE}`
+APT_GET_EXECUTABLE_PATH=`command -v ${APT_GET_EXECUTABLE}`
 YUM_EXECUTABLE='yum'
-YUM_EXECUTABLE_PRESENT=`command -v ${YUM_EXECUTABLE}`
+YUM_EXECUTABLE_PATH=`command -v ${YUM_EXECUTABLE}`
   
 # Verify that the 'unzip' executable file exists and is
 # in the current PATH. Install it if not already present.
@@ -55,14 +62,18 @@ YUM_EXECUTABLE_PRESENT=`command -v ${YUM_EXECUTABLE}`
 UNZIP_EXECUTABLE='unzip'
 echo "Checking for existance of executable file '${UNZIP_EXECUTABLE}' ..."
 if [ ! `command -v ${UNZIP_EXECUTABLE}` ]; then
-  if [ ! APT_GET_EXECUTABLE_PRESENT ] || [ ! YUM_EXECUTABLE_PRESENT ]; then
+  # If the paths to both package manager executable files were not found
+  # and 'unzip' isn't present, halt script execution with an error.
+  # 'unzip' is required for actions to be performed later.
+  if [ -z APT_GET_EXECUTABLE_PATH ] && [ -z YUM_EXECUTABLE_PATH ]; then
     echo "Could not find or install executable file ${UNZIP_EXECUTABLE}"
     exit 1
   fi
-  if [ APT_GET_EXECUTABLE_PRESENT ]; then
+  # Otherwise, install 'unzip' via whichever package manager is available.
+  if [ ! -z APT_GET_EXECUTABLE_PATH ]; then
     echo "Installing '${UNZIP_EXECUTABLE}' ..."
     apt-get install unzip
-  elif [ YUM_EXECUTABLE_PRESENT ]; then
+  elif [ ! -z YUM_EXECUTABLE_PATH ]; then
     echo "Installing '${UNZIP_EXECUTABLE}' ..."
     yum install unzip
   else
@@ -95,8 +106,10 @@ do
   echo "Downloading CollectionSpace Puppet module '${MODULES[MODULE_COUNTER]}' ..."
   module=${MODULES[MODULE_COUNTER]}
   moduleurl="$GITHUB_REPO/${module}/${GITHUB_ARCHIVE_PATH}/${GITHUB_ARCHIVE_FILENAME}"
-  wget $moduleurl
-  unzip $GITHUB_ARCHIVE_FILENAME
+  wget --no-verbose $moduleurl
+  echo "Extracting files from archive file '${GITHUB_ARCHIVE_FILENAME}' ..."
+  unzip -q $GITHUB_ARCHIVE_FILENAME
+  echo "Removing archive file ..."
   rm $GITHUB_ARCHIVE_FILENAME
   # GitHub's master branch ZIP archives, when exploded to a directory,
   # have a '-master' suffix that must be removed.
