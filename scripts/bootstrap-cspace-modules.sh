@@ -127,7 +127,7 @@ done
 # CollectionSpace Puppet modules depend.
 
 echo "Downloading required Puppet modules from Puppet Forge ..."
-puppet module install --force --modulepath=$MODULEPATH puppetlabs/postgresql
-puppet module install --force --modulepath=$MODULEPATH puppetlabs/stdlib
-puppet module install --force --modulepath=$MODULEPATH puppetlabs/vcsrepo
+puppet module install --modulepath=$MODULEPATH puppetlabs/postgresql
+puppet module install --modulepath=$MODULEPATH puppetlabs/stdlib
+puppet module install --modulepath=$MODULEPATH puppetlabs/vcsrepo
 
