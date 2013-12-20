@@ -55,7 +55,7 @@ APT_GET_EXECUTABLE='apt-get'
 APT_GET_EXECUTABLE_PATH=`command -v ${APT_GET_EXECUTABLE}`
 YUM_EXECUTABLE='yum'
 YUM_EXECUTABLE_PATH=`command -v ${YUM_EXECUTABLE}`
-  
+ 
 # Verify that the 'unzip' executable file exists and is
 # in the current PATH. Install it if not already present.
 
@@ -65,17 +65,17 @@ if [ ! `command -v ${UNZIP_EXECUTABLE}` ]; then
   # If the paths to both package manager executable files were not found
   # and 'unzip' isn't present, halt script execution with an error.
   # 'unzip' is required for actions to be performed later.
-  if [ -z APT_GET_EXECUTABLE_PATH ] && [ -z YUM_EXECUTABLE_PATH ]; then
+  if [ -z $APT_GET_EXECUTABLE_PATH ] && [ -z $YUM_EXECUTABLE_PATH ]; then
     echo "Could not find or install executable file ${UNZIP_EXECUTABLE}"
     exit 1
   fi
   # Otherwise, install 'unzip' via whichever package manager is available.
-  if [ ! -z APT_GET_EXECUTABLE_PATH ]; then
+  if [ ! -z $APT_GET_EXECUTABLE_PATH ]; then
     echo "Installing '${UNZIP_EXECUTABLE}' ..."
     apt-get install unzip
-  elif [ ! -z YUM_EXECUTABLE_PATH ]; then
+  elif [ ! -z $YUM_EXECUTABLE_PATH ]; then
     echo "Installing '${UNZIP_EXECUTABLE}' ..."
-    yum install unzip
+    yum -y install unzip
   else
     echo "Could not install executable file ${UNZIP_EXECUTABLE}"
     exit 1
