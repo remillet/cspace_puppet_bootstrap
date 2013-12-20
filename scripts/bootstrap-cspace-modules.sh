@@ -82,7 +82,7 @@ if [ ! `command -v ${UNZIP_EXECUTABLE}` ]; then
   fi
 fi
 
-# Install the CollectionSpace modules from GitHub
+# Install the CollectionSpace-related Puppet modules from GitHub.
 
 GITHUB_REPO='https://github.com/cspace-puppet'
 GITHUB_ARCHIVE_PATH='archive'
@@ -125,8 +125,8 @@ do
   let MODULE_COUNTER++
 done
 
-# Install any modules from Puppet Forge on which the CollectionSpace
-# modules depend.
+# Install any Puppet Forge-hosted Puppet modules on which the
+# CollectionSpace Puppet modules depend.
 
 echo "Downloading required Puppet modules from Puppet Forge ..."
 # The 'puppetlabs/postgresql' module also installs 'puppetlabs/stdlib',
