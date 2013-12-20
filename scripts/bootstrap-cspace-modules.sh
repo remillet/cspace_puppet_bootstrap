@@ -100,34 +100,45 @@ MODULES+=(
 cd $MODULEPATH
 let MODULE_COUNTER=0
 for module in ${MODULES[*]}
-do
-  echo "Downloading CollectionSpace Puppet module '${MODULES[MODULE_COUNTER]}' ..."
-  module=${MODULES[MODULE_COUNTER]}
-  moduleurl="$GITHUB_REPO/${module}/${GITHUB_ARCHIVE_PATH}/${GITHUB_ARCHIVE_FILENAME}"
-  wget --no-verbose $moduleurl
-  echo "Extracting files from archive file '${GITHUB_ARCHIVE_FILENAME}' ..."
-  unzip -q $GITHUB_ARCHIVE_FILENAME
-  echo "Removing archive file ..."
-  rm $GITHUB_ARCHIVE_FILENAME
-  # GitHub's master branch ZIP archives, when exploded to a directory,
-  # have a '-master' suffix that must be removed.
-  # When doing this renaming, first rename any existing directory
-  # with the target name to avoid collisions.
-  if [ -d "${module}" ]; then
-    moved_old_module_name=`mktemp -t -d ${module}.XXXXX` || exit 1
-    mv $module $moved_old_module_name
-    echo "Backed up existing module to $moved_old_module_name ..."
-  fi
-  echo "Renaming CollectionSpace module directory ..."
-  mv "${module}${GITHUB_ARCHIVE_MASTER_SUFFIX}" $module
-  let MODULE_COUNTER++
-done
+  do
+    echo "Downloading CollectionSpace Puppet module '${MODULES[MODULE_COUNTER]}' ..."
+    module=${MODULES[MODULE_COUNTER]}
+    moduleurl="$GITHUB_REPO/${module}/${GITHUB_ARCHIVE_PATH}/${GITHUB_ARCHIVE_FILENAME}"
+    wget --no-verbose $moduleurl
+    echo "Extracting files from archive file '${GITHUB_ARCHIVE_FILENAME}' ..."
+    unzip -q $GITHUB_ARCHIVE_FILENAME
+    echo "Removing archive file ..."
+    rm $GITHUB_ARCHIVE_FILENAME
+    # GitHub's master branch ZIP archives, when exploded to a directory,
+    # have a '-master' suffix that must be removed.
+    # When doing this renaming, first rename any existing directory
+    # with the target name to avoid collisions.
+    if [ -d "${module}" ]; then
+      moved_old_module_name=`mktemp -t -d ${module}.XXXXX` || exit 1
+      mv $module $moved_old_module_name
+      echo "Backed up existing module to $moved_old_module_name ..."
+    fi
+    echo "Renaming CollectionSpace module directory ..."
+    mv "${module}${GITHUB_ARCHIVE_MASTER_SUFFIX}" $module
+    let MODULE_COUNTER++
+  done
 
 # Install any Puppet Forge-hosted Puppet modules on which the
 # CollectionSpace Puppet modules depend.
 
 echo "Downloading required Puppet modules from Puppet Forge ..."
-puppet module install --modulepath=$MODULEPATH puppetlabs/postgresql
-puppet module install --modulepath=$MODULEPATH puppetlabs/stdlib
-puppet module install --modulepath=$MODULEPATH puppetlabs/vcsrepo
+PF_MODULES+=( 
+  'puppetlabs-postgresql' \
+  'puppetlabs-stdlib' \
+  'puppetlabs-vcsrepo' \
+  )
+let PF_COUNTER=0
+for pf_module in ${PF_MODULES[*]}
+  do
+    echo "Uninstalling Puppet module ${PF_MODULES[PF_COUNTER]} (if present) ..."
+    puppet module uninstall --force --modulepath=$MODULEPATH ${PF_MODULES[PF_COUNTER]} > /dev/null 2>&1
+    echo "Installing Puppet module ${PF_MODULES[PF_COUNTER]} ..."
+    puppet module install --modulepath=$MODULEPATH ${PF_MODULES[PF_COUNTER]}
+    let PF_COUNTER++
+  done
 
