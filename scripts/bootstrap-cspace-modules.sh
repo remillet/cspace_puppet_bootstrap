@@ -128,8 +128,7 @@ done
 # CollectionSpace Puppet modules depend.
 
 echo "Downloading required Puppet modules from Puppet Forge ..."
-# The 'puppetlabs/postgresql' module also installs 'puppetlabs/stdlib',
-# another dependency, so it isn't necessary to install the latter separately.
 puppet module install --force --modulepath=$MODULEPATH puppetlabs/postgresql
+puppet module install --force --modulepath=$MODULEPATH puppetlabs/stdlib
 puppet module install --force --modulepath=$MODULEPATH puppetlabs/vcsrepo
 
