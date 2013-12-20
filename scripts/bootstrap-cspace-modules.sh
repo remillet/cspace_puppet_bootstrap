@@ -7,9 +7,8 @@
 
 # This script must be run as 'root' (e.g. via 'sudo')
 
-SCRIPT_NAME=`basename $0` # Works unless symlinked
-EFFECTIVE_USER=`echo "$(whoami)"`
-if [ $EFFECTIVE_USER != 'root' ]; then
+SCRIPT_NAME=`basename $0` # May be misleading if script is symlinked
+if [ "$EUID" -ne "0" ]; then
   echo "${SCRIPT_NAME}: This script must be run as root (e.g. via 'sudo') ..."
   exit 1
 fi
