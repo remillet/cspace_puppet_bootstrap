@@ -17,7 +17,7 @@ fi
 # and is in the current PATH.
 
 PUPPET_EXECUTABLE='puppet'
-echo "Checking for existance of executable file '${PUPPET_EXECUTABLE}' ..."
+echo "Checking for existence of executable file '${PUPPET_EXECUTABLE}' ..."
 if [ ! `command -v ${PUPPET_EXECUTABLE}` ]; then
   echo "Could not find executable file '${PUPPET_EXECUTABLE}'"
   exit 1
@@ -29,7 +29,7 @@ fi
 # been some problem with that installation.
 
 MODULEPATH='/etc/puppet/modules'
-echo "Checking for existance of Puppet module directory '$MODULEPATH' ..."
+echo "Checking for existence of Puppet module directory '$MODULEPATH' ..."
 if [ ! -d "${MODULEPATH}" ]; then
   echo "Could not find Puppet module directory '$MODULEPATH'"
   exit 1
@@ -41,7 +41,7 @@ fi
 # appropriate 'hashicorp/puppet-bootstrap' script.)
 
 WGET_EXECUTABLE='wget'
-echo "Checking for existance of executable file '${WGET_EXECUTABLE}' ..."
+echo "Checking for existence of executable file '${WGET_EXECUTABLE}' ..."
 if [ ! `command -v ${WGET_EXECUTABLE}` ]; then
   echo "Could not find executable file '${WGET_EXECUTABLE}'"
   exit 1
@@ -59,7 +59,7 @@ YUM_EXECUTABLE_PATH=`command -v ${YUM_EXECUTABLE}`
 # in the current PATH. Install it if not already present.
 
 UNZIP_EXECUTABLE='unzip'
-echo "Checking for existance of executable file '${UNZIP_EXECUTABLE}' ..."
+echo "Checking for existence of executable file '${UNZIP_EXECUTABLE}' ..."
 if [ ! `command -v ${UNZIP_EXECUTABLE}` ]; then
   # If the paths to both package manager executable files were not found
   # and 'unzip' isn't present, halt script execution with an error.
@@ -98,7 +98,6 @@ MODULES+=(
   )
 
 cd $MODULEPATH
-echo `pwd`
 let MODULE_COUNTER=0
 for module in ${MODULES[*]}
 do
