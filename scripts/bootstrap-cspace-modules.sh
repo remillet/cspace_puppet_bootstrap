@@ -95,6 +95,7 @@ MODULES+=(
   'cspace_postgresql_server' \
   'cspace_tarball' \
   'cspace_source' \
+  'cspace_user' \
   )
 
 cd $MODULEPATH
