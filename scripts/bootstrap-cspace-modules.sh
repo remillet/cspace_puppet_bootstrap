@@ -145,7 +145,8 @@ for pf_module in ${PF_MODULES[*]}
     let PF_COUNTER++
   done
   
-# Set the Puppet modulepath in the main Puppet configuration file.
+# Set the Puppet modulepath in the main Puppet configuration file (an INI-style file)
+# by invoking the 'ini_setting' resource in the 'puppetlabs-inifile' module.
 
 echo "Setting 'modulepath' in the main Puppet configuration file ..."
 PUPPETPATH='/etc/puppet'
