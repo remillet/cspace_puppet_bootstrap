@@ -7,7 +7,7 @@
 
 # This script must be run as 'root' (e.g. via 'sudo')
 
-SCRIPT_NAME=`basename $0` # May be misleading if script is symlinked
+SCRIPT_NAME=`basename $0` # Note: script name may be misleading if script is symlinked
 if [ "$EUID" -ne "0" ]; then
   echo "${SCRIPT_NAME}: This script must be run as root (e.g. via 'sudo') ..."
   exit 1
@@ -28,7 +28,8 @@ fi
 # installed but this directory doesn't exist, there may have
 # been some problem with that installation.
 
-MODULEPATH='/etc/puppet/modules'
+PUPPETPATH='/etc/puppet'
+MODULEPATH="${PUPPETPATH}/modules"
 echo "Checking for existence of Puppet module directory '$MODULEPATH' ..."
 if [ ! -d "${MODULEPATH}" ]; then
   echo "Could not find Puppet module directory '$MODULEPATH'"
@@ -129,6 +130,7 @@ for module in ${MODULES[*]}
 
 echo "Downloading required Puppet modules from Puppet Forge ..."
 PF_MODULES+=( 
+  'puppetlabs-inifile' \
   'puppetlabs-postgresql' \
   'puppetlabs-stdlib' \
   'puppetlabs-vcsrepo' \
@@ -142,4 +144,29 @@ for pf_module in ${PF_MODULES[*]}
     puppet module install --modulepath=$MODULEPATH ${PF_MODULES[PF_COUNTER]}
     let PF_COUNTER++
   done
+  
+# Set the Puppet modulepath in the main Puppet configuration file.
+
+echo "Setting 'modulepath' in the main Puppet configuration file ..."
+PUPPETPATH='/etc/puppet'
+MODULEPATH="${PUPPETPATH}/modules"
+ini_cmd="ini_setting { 'Set modulepath in puppet.conf': "
+ini_cmd+="  path    => '${PUPPETPATH}/puppet.conf', "
+ini_cmd+="  section => 'main', "
+ini_cmd+="  setting => 'modulepath', "
+ini_cmd+="  value   => '${MODULEPATH}', "
+ini_cmd+="  ensure  => 'present', "
+ini_cmd+="} "
+
+puppet apply --modulepath $MODULEPATH -e "${ini_cmd}"
+
+# Create a default (initially empty) Hiera configuration file.
+#
+# TODO: For suggestions related to a plausible, non-empty Hiera configuration,
+# see http://puppetlabs.com/blog/writing-great-modules-part-2
+
+echo "Creating default Hiera configuration file ..."
+if [ ! -e "${PUPPETPATH}/hiera.yaml" ]; then
+  touch $PUPPETPATH/hiera.yaml
+fi
 
