@@ -151,19 +151,34 @@ for pf_module in ${PF_MODULES[*]}
 echo "Setting 'modulepath' in the main Puppet configuration file ..."
 PUPPETPATH='/etc/puppet'
 MODULEPATH="${PUPPETPATH}/modules"
-ini_cmd="ini_setting { 'Set modulepath in puppet.conf': "
-ini_cmd+="  path    => '${PUPPETPATH}/puppet.conf', "
-ini_cmd+="  section => 'main', "
-ini_cmd+="  setting => 'modulepath', "
-ini_cmd+="  value   => '${MODULEPATH}', "
-ini_cmd+="  ensure  => 'present', "
-ini_cmd+="} "
+modulepath_ini_cmd="ini_setting { 'Set modulepath in puppet.conf': "
+modulepath_ini_cmd+="  path    => '${PUPPETPATH}/puppet.conf', "
+modulepath_ini_cmd+="  section => 'main', "
+modulepath_ini_cmd+="  setting => 'modulepath', "
+modulepath_ini_cmd+="  value   => '${MODULEPATH}', "
+modulepath_ini_cmd+="  ensure  => 'present', "
+modulepath_ini_cmd+="} "
 
-puppet apply --modulepath $MODULEPATH -e "${ini_cmd}"
+puppet apply --modulepath $MODULEPATH -e "${modulepath_ini_cmd}"
+
+# Enable random ordering of unrelated resources on each run, in a manner similar to the above.
+# "This can work like a fuzzer for shaking out undeclared dependencies."
+# See http://docs.puppetlabs.com/references/latest/configuration.html#ordering
+
+echo "Setting 'ordering' in the main Puppet configuration file ..."
+ordering_ini_cmd="ini_setting { 'Set ordering in puppet.conf': "
+ordering_ini_cmd+="  path    => '${PUPPETPATH}/puppet.conf', "
+ordering_ini_cmd+="  section => 'main', "
+ordering_ini_cmd+="  setting => 'ordering', "
+ordering_ini_cmd+="  value   => 'random', "
+ordering_ini_cmd+="  ensure  => 'present', "
+ordering_ini_cmd+="} "
+
+puppet apply --modulepath $MODULEPATH -e "${ordering_ini_cmd}"
 
 # Create a default (initially empty) Hiera configuration file.
 #
-# TODO: For suggestions related to a plausible, non-empty Hiera configuration,
+# TODO: For suggestions related to a plausible starting point, non-empty Hiera configuration,
 # see http://puppetlabs.com/blog/writing-great-modules-part-2
 
 echo "Creating default Hiera configuration file ..."
