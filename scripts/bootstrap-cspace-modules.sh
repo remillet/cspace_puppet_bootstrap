@@ -181,6 +181,13 @@ puppet apply --modulepath $MODULEPATH -e "${ordering_ini_cmd}"
 # TODO: For suggestions related to a plausible starting point, non-empty Hiera configuration,
 # see http://puppetlabs.com/blog/writing-great-modules-part-2
 
+# FIXME: On Ubuntu 13.10, when applying puppet/manifests/site.pp, this
+# results in "Error from DataBinding 'hiera' while looking up
+# 'cspace_user::user_acct_name': no implicit conversion from nil to integer ...""
+# The workaround is to write at least '---' to the hiera.yaml file,
+# rather than leaving that file empty:
+# https://bugs.launchpad.net/ubuntu/+source/puppet/+bug/1246229/comments/6
+
 echo "Creating default Hiera configuration file ..."
 if [ ! -e "${PUPPETPATH}/hiera.yaml" ]; then
   touch $PUPPETPATH/hiera.yaml
