@@ -13,29 +13,6 @@ if [ "$EUID" -ne "0" ]; then
   exit 1
 fi
 
-# Verify that the 'puppet' executable file exists
-# and is in the current PATH.
-
-PUPPET_EXECUTABLE='puppet'
-echo "Checking for existence of executable file '${PUPPET_EXECUTABLE}' ..."
-if [ ! `command -v ${PUPPET_EXECUTABLE}` ]; then
-  echo "Could not find executable file '${PUPPET_EXECUTABLE}'"
-  exit 1
-fi
-
-# Verify that the default, system-wide Puppet module
-# directory exists (even if it is a simlink). If Puppet is
-# installed but this directory doesn't exist, there may have
-# been some problem with that installation.
-
-PUPPETPATH='/etc/puppet'
-MODULEPATH="${PUPPETPATH}/modules"
-echo "Checking for existence of Puppet module directory '$MODULEPATH' ..."
-if [ ! -d "${MODULEPATH}" ]; then
-  echo "Could not find Puppet module directory '$MODULEPATH'"
-  exit 1
-fi
-
 # Verify that the 'wget' executable file exists
 # and is in the current PATH. (The existence of 'wget'
 # should have previously been ensured by running the 
@@ -80,6 +57,51 @@ if [ ! `command -v ${UNZIP_EXECUTABLE}` ]; then
     echo "Could not install executable file ${UNZIP_EXECUTABLE}"
     exit 1
   fi
+fi
+
+# Install Puppet, if necessary
+# This uses a bootstrap script created and maintained by Daniel Dreier,
+# which works with several Linux distributions, including RedHat-based
+# and Debian-based distros.
+
+# Maintain the SHA-1 hash of a vetted commit of this file here.
+# (Using 'master' instead of a specific commit makes downloading and running
+# this script subject to security vulnerabilities and newly-introduced bugs.)
+PUPPET_INSTALL_COMMIT='10578ddbcd83f7fc6e57dfe2cae03459c8d367a5'
+PUPPET_INSTALL_GITHUB_PATH="https://raw.github.com/danieldreier/vagrant-template/${PUPPET_INSTALL_COMMIT}/provision"
+PUPPET_INSTALL_SCRIPT_NAME='install_puppet.sh'
+
+echo "Downloading script for installing Puppet ..."
+moduleurl="${PUPPET_INSTALL_GITHUB_PATH}/${PUPPET_INSTALL_SCRIPT_NAME}"
+wget --no-verbose $moduleurl -O $PUPPET_INSTALL_SCRIPT_NAME
+
+echo "Installing Puppet, if it is not already installed ..."
+if [ -e $PUPPET_INSTALL_SCRIPT_NAME ]; then
+  chmod u+x $PUPPET_INSTALL_SCRIPT_NAME
+  ./$PUPPET_INSTALL_SCRIPT_NAME
+fi
+
+# Verify that the 'puppet' executable file exists
+# and is in the current PATH.
+
+PUPPET_EXECUTABLE='puppet'
+echo "Checking for existence of executable file '${PUPPET_EXECUTABLE}' ..."
+if [ ! `command -v ${PUPPET_EXECUTABLE}` ]; then
+  echo "Could not find executable file '${PUPPET_EXECUTABLE}'"
+  exit 1
+fi
+
+# Verify that the default, system-wide Puppet module
+# directory exists (even if it is a simlink). If Puppet is
+# installed but this directory doesn't exist, there may have
+# been some problem with its installation.
+
+PUPPETPATH='/etc/puppet'
+MODULEPATH="${PUPPETPATH}/modules"
+echo "Checking for existence of Puppet module directory '$MODULEPATH' ..."
+if [ ! -d "${MODULEPATH}" ]; then
+  echo "Could not find Puppet module directory '$MODULEPATH'"
+  exit 1
 fi
 
 # Install the CollectionSpace-related Puppet modules from GitHub.
@@ -147,6 +169,9 @@ for pf_module in ${PF_MODULES[*]}
   
 # Set the Puppet modulepath in the main Puppet configuration file (an INI-style file)
 # by invoking the 'ini_setting' resource in the 'puppetlabs-inifile' module.
+#
+# (Note: when constructing Puppet resources below, the interpolation of variables
+# within single-quotes is done here in 'bash'; that would not be performed in Puppet.)
 
 echo "Setting 'modulepath' in the main Puppet configuration file ..."
 PUPPETPATH='/etc/puppet'
@@ -161,9 +186,10 @@ modulepath_ini_cmd+="} "
 
 puppet apply --modulepath $MODULEPATH -e "${modulepath_ini_cmd}"
 
-# Enable random ordering of unrelated resources on each run, in a manner similar to the above.
-# "This can work like a fuzzer for shaking out undeclared dependencies."
-# See http://docs.puppetlabs.com/references/latest/configuration.html#ordering
+# Enable random ordering of unrelated resources on each run,
+# in a manner similar to the above.
+# "This can work like a fuzzer for shaking out undeclared dependencies." See:
+# http://docs.puppetlabs.com/references/latest/configuration.html#ordering
 
 echo "Setting 'ordering' in the main Puppet configuration file ..."
 ordering_ini_cmd="ini_setting { 'Set ordering in puppet.conf': "
@@ -176,20 +202,25 @@ ordering_ini_cmd+="} "
 
 puppet apply --modulepath $MODULEPATH -e "${ordering_ini_cmd}"
 
-# Create a default (initially empty) Hiera configuration file.
+# Create a default (initially minimal) Hiera configuration file.
 #
-# TODO: For suggestions related to a plausible starting point, non-empty Hiera configuration,
-# see http://puppetlabs.com/blog/writing-great-modules-part-2
+# TODO: For suggestions related to a plausible initial, non-minimal
+# Hiera configuration, see:
+# http://puppetlabs.com/blog/writing-great-modules-part-2
 
-# FIXME: On Ubuntu 13.10, when applying puppet/manifests/site.pp, this
-# results in "Error from DataBinding 'hiera' while looking up
-# 'cspace_user::user_acct_name': no implicit conversion from nil to integer ...""
-# The workaround is to write at least '---' to the hiera.yaml file,
-# rather than leaving that file empty:
+# By writing at least a single document separator ('---')
+# to the hiera.yaml file, rather than leaving that file empty, this
+# avoids an "Error from DataBinding 'hiera' while looking up
+# 'cspace_user::user_acct_name': no implicit conversion from nil to integer ...",
+# at least under Ubuntu 13.10. See:
 # https://bugs.launchpad.net/ubuntu/+source/puppet/+bug/1246229/comments/6
 
 echo "Creating default Hiera configuration file ..."
-if [ ! -e "${PUPPETPATH}/hiera.yaml" ]; then
-  touch $PUPPETPATH/hiera.yaml
-fi
+hiera_config="file { 'Hiera config':"
+hiera_config+="  path => '${PUPPETPATH}/hiera.yaml', "
+hiera_config+="  content => '---', "
+hiera_config+="} "
+
+puppet apply --modulepath $MODULEPATH -e "${hiera_config}"
+
 
