@@ -160,8 +160,10 @@ PF_MODULES+=(
 let PF_COUNTER=0
 for pf_module in ${PF_MODULES[*]}
   do
-    # echo "Uninstalling Puppet module ${PF_MODULES[PF_COUNTER]} (if present) ..."
-    # puppet module uninstall --force --modulepath=$MODULEPATH ${PF_MODULES[PF_COUNTER]} > /dev/null 2>&1
+    # Uninstallation, followed by installation, appears to be necessary
+    # to pick up dependency modules.
+    echo "Uninstalling Puppet module ${PF_MODULES[PF_COUNTER]} (if present) ..."
+    puppet module uninstall --force --modulepath=$MODULEPATH ${PF_MODULES[PF_COUNTER]} > /dev/null 2>&1
     echo "Installing Puppet module ${PF_MODULES[PF_COUNTER]} ..."
     puppet module install --force --modulepath=$MODULEPATH ${PF_MODULES[PF_COUNTER]}
     let PF_COUNTER++
