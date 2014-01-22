@@ -177,6 +177,9 @@ for pf_module in ${PF_MODULES[*]}
 # As well, the new behavior requires that a 'postgres' user exist before
 # the pg_hba.conf file is written to, and that resource ordering has so
 # far proven challenging without introducing cyclic dependencies.
+#
+# For an alternative workaround for this issue, see:
+# https://github.com/puppetlabs/puppetlabs-postgresql/issues/348
 
 sudo puppet module install --force --version 1.0.0 puppetlabs-concat
   
