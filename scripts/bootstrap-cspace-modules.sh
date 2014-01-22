@@ -160,12 +160,20 @@ PF_MODULES+=(
 let PF_COUNTER=0
 for pf_module in ${PF_MODULES[*]}
   do
-    echo "Uninstalling Puppet module ${PF_MODULES[PF_COUNTER]} (if present) ..."
-    puppet module uninstall --force --modulepath=$MODULEPATH ${PF_MODULES[PF_COUNTER]} > /dev/null 2>&1
+    # echo "Uninstalling Puppet module ${PF_MODULES[PF_COUNTER]} (if present) ..."
+    # puppet module uninstall --force --modulepath=$MODULEPATH ${PF_MODULES[PF_COUNTER]} > /dev/null 2>&1
     echo "Installing Puppet module ${PF_MODULES[PF_COUNTER]} ..."
-    puppet module install --modulepath=$MODULEPATH ${PF_MODULES[PF_COUNTER]}
+    puppet module install --force --modulepath=$MODULEPATH ${PF_MODULES[PF_COUNTER]}
     let PF_COUNTER++
   done
+  
+# Temporary workaround for issue where postgresql::server::pg_hba_rule in
+# puppetlabs-postgresql version 3.2.0 has not yet been upgraded for
+# changes in puppetlabs-concat 1.1.0 and later, including changes to
+# default owner and group values, and thus generating deprecation warnings.
+# Commented out for now; can be enabled if needed.
+# 
+# sudo puppet module install --force --version 1.0.0 puppetlabs-concat
   
 # Set the Puppet modulepath in the main Puppet configuration file (an INI-style file)
 # by invoking the 'ini_setting' resource in the 'puppetlabs-inifile' module.
