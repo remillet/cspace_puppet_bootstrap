@@ -165,7 +165,7 @@ for pf_module in ${PF_MODULES[*]}
     echo "Uninstalling Puppet module ${PF_MODULES[PF_COUNTER]} (if present) ..."
     puppet module uninstall --force --modulepath=$MODULEPATH ${PF_MODULES[PF_COUNTER]} > /dev/null 2>&1
     echo "Installing Puppet module ${PF_MODULES[PF_COUNTER]} ..."
-    puppet module install --force --modulepath=$MODULEPATH ${PF_MODULES[PF_COUNTER]}
+    puppet module install --modulepath=$MODULEPATH ${PF_MODULES[PF_COUNTER]}
     let PF_COUNTER++
   done
   
