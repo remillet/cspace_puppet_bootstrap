@@ -173,9 +173,12 @@ for pf_module in ${PF_MODULES[*]}
 # puppetlabs-postgresql version 3.2.0 has not yet been upgraded for
 # changes in puppetlabs-concat 1.1.0 and later, including changes to
 # default owner and group values, and thus generating deprecation warnings.
-# Commented out for now; can be enabled if needed.
 # 
-# sudo puppet module install --force --version 1.0.0 puppetlabs-concat
+# As well, the new behavior requires that a 'postgres' user exist before
+# the pg_hba.conf file is written to, and that resource ordering has so
+# far proven challenging without introducing cyclic dependencies.
+
+sudo puppet module install --force --version 1.0.0 puppetlabs-concat
   
 # Set the Puppet modulepath in the main Puppet configuration file (an INI-style file)
 # by invoking the 'ini_setting' resource in the 'puppetlabs-inifile' module.
