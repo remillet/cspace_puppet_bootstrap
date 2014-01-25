@@ -67,7 +67,7 @@ fi
 # Maintain the SHA-1 hash of a vetted commit of this file here.
 # (Using 'master' instead of a specific commit makes downloading and running
 # this script subject to security vulnerabilities and newly-introduced bugs.)
-PUPPET_INSTALL_COMMIT='10578ddbcd83f7fc6e57dfe2cae03459c8d367a5'
+PUPPET_INSTALL_COMMIT='ce57d123901abf580dd177c337074d12093f3c21'
 PUPPET_INSTALL_GITHUB_PATH="https://raw.github.com/danieldreier/vagrant-template/${PUPPET_INSTALL_COMMIT}/provision"
 PUPPET_INSTALL_SCRIPT_NAME='install_puppet.sh'
 
