@@ -16,10 +16,10 @@ fi
 # Verify that either the 'wget' or 'curl' executable file
 # exists and is in the current PATH.
 
-WGET_EXECUTABLE='wget'
+WGET_FOUND=false
 echo "Checking for existence of executable file '${WGET_EXECUTABLE}' ..."
 if [ `command -v ${WGET_EXECUTABLE}` ]; then
-  WGET_FOUND = true
+  WGET_FOUND=true
 fi
 
 if [ ! $WGET_FOUND ]; then
@@ -77,12 +77,14 @@ PUPPET_INSTALL_COMMIT='ce57d123901abf580dd177c337074d12093f3c21'
 PUPPET_INSTALL_GITHUB_PATH="https://raw.github.com/danieldreier/vagrant-template/${PUPPET_INSTALL_COMMIT}/provision"
 PUPPET_INSTALL_SCRIPT_NAME='install_puppet.sh'
 
-echo "Downloading script for installing Puppet ..."
-moduleurl="${PUPPET_INSTALL_GITHUB_PATH}/${PUPPET_INSTALL_SCRIPT_NAME}"
-if [ $WGET_FOUND ]; then
-  wget --no-verbose $moduleurl --output-document=$PUPPET_INSTALL_SCRIPT_NAME
-else
-  curl $moduleurl --output $PUPPET_INSTALL_SCRIPT_NAME
+if [ ! -e ./$PUPPET_INSTALL_SCRIPT_NAME ]; then
+  echo "Downloading script for installing Puppet ..."
+  moduleurl="${PUPPET_INSTALL_GITHUB_PATH}/${PUPPET_INSTALL_SCRIPT_NAME}"
+  if [ $WGET_FOUND ]; then
+    wget --no-verbose $moduleurl --output-document=$PUPPET_INSTALL_SCRIPT_NAME
+  else
+    curl $moduleurl --output $PUPPET_INSTALL_SCRIPT_NAME
+  fi
 fi
 
 echo "Installing Puppet, if it is not already installed ..."
