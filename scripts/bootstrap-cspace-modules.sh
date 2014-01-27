@@ -13,16 +13,22 @@ if [ "$EUID" -ne "0" ]; then
   exit 1
 fi
 
-# Verify that the 'wget' executable file exists
-# and is in the current PATH. (The existence of 'wget'
-# should have previously been ensured by running the 
-# appropriate 'hashicorp/puppet-bootstrap' script.)
+# Verify that either the 'wget' or 'curl' executable file
+# exists and is in the current PATH.
 
 WGET_EXECUTABLE='wget'
 echo "Checking for existence of executable file '${WGET_EXECUTABLE}' ..."
-if [ ! `command -v ${WGET_EXECUTABLE}` ]; then
-  echo "Could not find executable file '${WGET_EXECUTABLE}'"
-  exit 1
+if [ `command -v ${WGET_EXECUTABLE}` ]; then
+  WGET_FOUND = true
+fi
+
+if [ ! $WGET_FOUND ]; then
+  CURL_EXECUTABLE='curl'
+  echo "Checking for existence of executable file '${CURL_EXECUTABLE}' ..."
+  if [ ! `command -v ${CURL_EXECUTABLE}` ]; then
+    echo "Could not find executable file '${WGET_EXECUTABLE}' or '${CURL_EXECUTABLE}'"
+    exit 1
+  fi
 fi
 
 # Verify whether the 'apt-get' or 'yum' package manager
@@ -73,7 +79,11 @@ PUPPET_INSTALL_SCRIPT_NAME='install_puppet.sh'
 
 echo "Downloading script for installing Puppet ..."
 moduleurl="${PUPPET_INSTALL_GITHUB_PATH}/${PUPPET_INSTALL_SCRIPT_NAME}"
-wget --no-verbose $moduleurl -O $PUPPET_INSTALL_SCRIPT_NAME
+if [ $WGET_FOUND ]; then
+  wget --no-verbose $moduleurl --output-document=$PUPPET_INSTALL_SCRIPT_NAME
+else
+  curl $moduleurl --output $PUPPET_INSTALL_SCRIPT_NAME
+fi
 
 echo "Installing Puppet, if it is not already installed ..."
 if [ -e $PUPPET_INSTALL_SCRIPT_NAME ]; then
@@ -129,6 +139,11 @@ for module in ${MODULES[*]}
     module=${MODULES[MODULE_COUNTER]}
     moduleurl="$GITHUB_REPO/${module}/${GITHUB_ARCHIVE_PATH}/${GITHUB_ARCHIVE_FILENAME}"
     wget --no-verbose $moduleurl
+    if [ $WGET_FOUND ]; then
+      wget --no-verbose $moduleurl
+    else
+      curl $moduleurl --remote-name
+    fi
     echo "Extracting files from archive file '${GITHUB_ARCHIVE_FILENAME}' ..."
     unzip -q $GITHUB_ARCHIVE_FILENAME
     echo "Removing archive file ..."
