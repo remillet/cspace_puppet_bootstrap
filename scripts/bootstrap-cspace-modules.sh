@@ -26,7 +26,8 @@ if [ ! $WGET_FOUND ]; then
   CURL_EXECUTABLE='curl'
   echo "Checking for existence of executable file '${CURL_EXECUTABLE}' ..."
   if [ ! `command -v ${CURL_EXECUTABLE}` ]; then
-    echo "Could not find executable file '${WGET_EXECUTABLE}' or '${CURL_EXECUTABLE}'"
+    # FIXME: Install wget or curl via a package manager, if both executables are not present.
+    echo "Could not find executable files '${WGET_EXECUTABLE}' or '${CURL_EXECUTABLE}'"
     exit 1
   fi
 fi
@@ -140,7 +141,6 @@ for module in ${MODULES[*]}
     echo "Downloading CollectionSpace Puppet module '${MODULES[MODULE_COUNTER]}' ..."
     module=${MODULES[MODULE_COUNTER]}
     moduleurl="$GITHUB_REPO/${module}/${GITHUB_ARCHIVE_PATH}/${GITHUB_ARCHIVE_FILENAME}"
-    wget --no-verbose $moduleurl
     if [ $WGET_FOUND ]; then
       wget --no-verbose $moduleurl
     else
@@ -149,7 +149,7 @@ for module in ${MODULES[*]}
     echo "Extracting files from archive file '${GITHUB_ARCHIVE_FILENAME}' ..."
     unzip -q $GITHUB_ARCHIVE_FILENAME
     echo "Removing archive file ..."
-    rm $GITHUB_ARCHIVE_FILENAME
+    rm -f $GITHUB_ARCHIVE_FILENAME
     # GitHub's master branch ZIP archives, when exploded to a directory,
     # have a '-master' suffix that must be removed.
     # When doing this renaming, first rename any existing directory
