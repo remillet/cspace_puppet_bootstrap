@@ -149,7 +149,7 @@ for module in ${MODULES[*]}
     echo "Extracting files from archive file '${GITHUB_ARCHIVE_FILENAME}' ..."
     unzip -q $GITHUB_ARCHIVE_FILENAME
     echo "Removing archive file ..."
-    rm -f $GITHUB_ARCHIVE_FILENAME
+    rm $GITHUB_ARCHIVE_FILENAME
     # GitHub's master branch ZIP archives, when exploded to a directory,
     # have a '-master' suffix that must be removed.
     # When doing this renaming, first rename any existing directory
