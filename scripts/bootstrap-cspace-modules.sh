@@ -30,8 +30,8 @@ else
   if [ `command -v ${CURL_EXECUTABLE}` ]; then
     echo "Found executable file '${CURL_EXECUTABLE}' ..."
   else
-    # FIXME: Install wget or curl via a package manager, if both executables are not present.
     echo "Could not find executable files '${WGET_EXECUTABLE}' or '${CURL_EXECUTABLE}'"
+    # FIXME: Install wget or curl via a package manager, if both executables are not present.
     exit 1
   fi
 fi
