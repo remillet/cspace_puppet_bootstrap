@@ -70,6 +70,12 @@ if [ ! `command -v ${UNZIP_EXECUTABLE}` ]; then
   fi
 fi
 
+# Check once again for the presence of 'unzip' after installation, if any.
+if [ ! `command -v ${UNZIP_EXECUTABLE}` ]; then
+  echo "Could not find or install executable file ${UNZIP_EXECUTABLE}"
+  exit 1
+fi
+
 # Install Puppet, if necessary
 # This uses a bootstrap script created and maintained by Daniel Dreier,
 # which works with several Linux distributions, including RedHat-based
@@ -214,15 +220,15 @@ sudo puppet module install --force --version 1.0.0 puppetlabs-concat
 echo "Setting 'modulepath' in the main Puppet configuration file ..."
 PUPPETPATH='/etc/puppet'
 MODULEPATH="${PUPPETPATH}/modules"
-modulepath_ini_cmd="ini_setting { 'Set modulepath in puppet.conf': "
-modulepath_ini_cmd+="  path    => '${PUPPETPATH}/puppet.conf', "
-modulepath_ini_cmd+="  section => 'main', "
-modulepath_ini_cmd+="  setting => 'modulepath', "
-modulepath_ini_cmd+="  value   => '${MODULEPATH}', "
-modulepath_ini_cmd+="  ensure  => 'present', "
-modulepath_ini_cmd+="} "
+modulepath_ini_resource="ini_setting { 'Set modulepath in puppet.conf': "
+modulepath_ini_resource+="  path    => '${PUPPETPATH}/puppet.conf', "
+modulepath_ini_resource+="  section => 'main', "
+modulepath_ini_resource+="  setting => 'modulepath', "
+modulepath_ini_resource+="  value   => '${MODULEPATH}', "
+modulepath_ini_resource+="  ensure  => 'present', "
+modulepath_ini_resource+="} "
 
-puppet apply --modulepath $MODULEPATH -e "${modulepath_ini_cmd}"
+puppet apply --modulepath $MODULEPATH -e "${modulepath_ini_resource}"
 
 # Enable random ordering of unrelated resources on each run,
 # in a manner similar to the above.
@@ -230,15 +236,15 @@ puppet apply --modulepath $MODULEPATH -e "${modulepath_ini_cmd}"
 # http://docs.puppetlabs.com/references/latest/configuration.html#ordering
 
 echo "Setting 'ordering' in the main Puppet configuration file ..."
-ordering_ini_cmd="ini_setting { 'Set ordering in puppet.conf': "
-ordering_ini_cmd+="  path    => '${PUPPETPATH}/puppet.conf', "
-ordering_ini_cmd+="  section => 'main', "
-ordering_ini_cmd+="  setting => 'ordering', "
-ordering_ini_cmd+="  value   => 'random', "
-ordering_ini_cmd+="  ensure  => 'present', "
-ordering_ini_cmd+="} "
+ordering_ini_resource="ini_setting { 'Set ordering in puppet.conf': "
+ordering_ini_resource+="  path    => '${PUPPETPATH}/puppet.conf', "
+ordering_ini_resource+="  section => 'main', "
+ordering_ini_resource+="  setting => 'ordering', "
+ordering_ini_resource+="  value   => 'random', "
+ordering_ini_resource+="  ensure  => 'present', "
+ordering_ini_resource+="} "
 
-puppet apply --modulepath $MODULEPATH -e "${ordering_ini_cmd}"
+puppet apply --modulepath $MODULEPATH -e "${ordering_ini_resource}"
 
 # Create a default (initially minimal) Hiera configuration file.
 #
