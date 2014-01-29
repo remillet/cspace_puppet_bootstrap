@@ -22,7 +22,9 @@ if [ `command -v ${WGET_EXECUTABLE}` ]; then
   WGET_FOUND=true
 fi
 
-if [ ! $WGET_FOUND ]; then
+if [ $WGET_FOUND == true ]; then
+  echo "Found executable file '${WGET_EXECUTABLE}' ..."
+else 
   CURL_EXECUTABLE='curl'
   echo "Checking for existence of executable file '${CURL_EXECUTABLE}' ..."
   if [ ! `command -v ${CURL_EXECUTABLE}` ]; then
@@ -81,10 +83,10 @@ PUPPET_INSTALL_SCRIPT_NAME='install_puppet.sh'
 if [ ! -e ./$PUPPET_INSTALL_SCRIPT_NAME ]; then
   echo "Downloading script for installing Puppet ..."
   moduleurl="${PUPPET_INSTALL_GITHUB_PATH}/${PUPPET_INSTALL_SCRIPT_NAME}"
-  if [ $WGET_FOUND ]; then
+  if [ $WGET_FOUND == true ]; then
     wget --no-verbose $moduleurl --output-document=$PUPPET_INSTALL_SCRIPT_NAME
   else
-    curl $moduleurl --output $PUPPET_INSTALL_SCRIPT_NAME
+    curl --output $PUPPET_INSTALL_SCRIPT_NAME $moduleurl 
   fi
 fi
 
@@ -141,10 +143,11 @@ for module in ${MODULES[*]}
     echo "Downloading CollectionSpace Puppet module '${MODULES[MODULE_COUNTER]}' ..."
     module=${MODULES[MODULE_COUNTER]}
     moduleurl="$GITHUB_REPO/${module}/${GITHUB_ARCHIVE_PATH}/${GITHUB_ARCHIVE_FILENAME}"
-    if [ $WGET_FOUND ]; then
+    if [ $WGET_FOUND == true ]; then
       wget --no-verbose $moduleurl
     else
-      curl $moduleurl --remote-name
+      # '--location' flag follows redirects
+      curl --location --remote-name $moduleurl 
     fi
     echo "Extracting files from archive file '${GITHUB_ARCHIVE_FILENAME}' ..."
     unzip -q $GITHUB_ARCHIVE_FILENAME
@@ -255,5 +258,3 @@ hiera_config+="  content => '---', "
 hiera_config+="} "
 
 puppet apply --modulepath $MODULEPATH -e "${hiera_config}"
-
-
