@@ -16,6 +16,7 @@ fi
 # Verify that either the 'wget' or 'curl' executable file
 # exists and is in the current PATH.
 
+WGET_EXECUTABLE='wget'
 WGET_FOUND=false
 echo "Checking for existence of executable file '${WGET_EXECUTABLE}' ..."
 if [ `command -v ${WGET_EXECUTABLE}` ]; then
