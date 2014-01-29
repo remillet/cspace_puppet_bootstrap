@@ -27,7 +27,9 @@ if [ $WGET_FOUND == true ]; then
 else 
   CURL_EXECUTABLE='curl'
   echo "Checking for existence of executable file '${CURL_EXECUTABLE}' ..."
-  if [ ! `command -v ${CURL_EXECUTABLE}` ]; then
+  if [ `command -v ${CURL_EXECUTABLE}` ]; then
+    echo "Found executable file '${CURL_EXECUTABLE}' ..."
+  else
     # FIXME: Install wget or curl via a package manager, if both executables are not present.
     echo "Could not find executable files '${WGET_EXECUTABLE}' or '${CURL_EXECUTABLE}'"
     exit 1
