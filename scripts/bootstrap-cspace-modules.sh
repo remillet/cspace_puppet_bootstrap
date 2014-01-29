@@ -61,19 +61,23 @@ if [ ! `command -v ${UNZIP_EXECUTABLE}` ]; then
   if [ ! -z $APT_GET_EXECUTABLE_PATH ]; then
     echo "Installing '${UNZIP_EXECUTABLE}' ..."
     apt-get install unzip
+    # TODO: Consider making checks for executable files into a function,
+    # in part to avoid 'DRY' violation here and below.
+    if [ ! `command -v ${UNZIP_EXECUTABLE}` ]; then
+      echo "Could not find or install executable file ${UNZIP_EXECUTABLE}"
+      exit 1
+    fi
   elif [ ! -z $YUM_EXECUTABLE_PATH ]; then
     echo "Installing '${UNZIP_EXECUTABLE}' ..."
     yum -y install unzip
+    if [ ! `command -v ${UNZIP_EXECUTABLE}` ]; then
+      echo "Could not find or install executable file ${UNZIP_EXECUTABLE}"
+      exit 1
+    fi
   else
     echo "Could not install executable file ${UNZIP_EXECUTABLE}"
     exit 1
   fi
-fi
-
-# Check once again for the presence of 'unzip' after installation, if any.
-if [ ! `command -v ${UNZIP_EXECUTABLE}` ]; then
-  echo "Could not find or install executable file ${UNZIP_EXECUTABLE}"
-  exit 1
 fi
 
 # Install Puppet, if necessary
