@@ -286,10 +286,28 @@ installer_file_resource+="} "
 puppet apply --modulepath $MODULEPATH -e "${installer_file_resource}"
 
 echo "--------------------------------------------------------------------------"
-echo "All prerequisites for a CollectionSpace server were successfully installed"
-echo "You can now install your CollectionSpace server by entering the command:"
-if [[ -x "$installer_script_filename" ]]; then
-  echo "sudo ./${installer_script_filename}"
-else
-  echo "sudo puppet apply ${MODULEPATH}/puppet/manifests/site.pp"
-fi
+echo -e "\n"
+echo "Congratulations!"
+echo "All prerequisites for a CollectionSpace server were successfully installed."
+echo -e "\n"
+read -p "Install your CollectionSpace server now [y/n]?" choice
+case "$choice" in 
+  y|Y )
+    echo "Starting installation ..."
+    if [[ -x "$installer_script_filename" ]]; then
+      sudo "${current_dir}/${installer_script_filename}"
+    else
+      echo "sudo puppet apply ${MODULEPATH}/puppet/manifests/site.pp"
+    fi
+  ;;
+  * )
+    echo -e "\n"
+    echo "You can later install your CollectionSpace server by entering the command:"
+    if [[ -x "$installer_script_filename" ]]; then
+      echo "sudo ${current_dir}/${installer_script_filename}"
+    else
+      echo "sudo puppet apply ${MODULEPATH}/puppet/manifests/site.pp"
+    fi
+  ;;
+esac
+
