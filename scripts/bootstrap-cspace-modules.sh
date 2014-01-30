@@ -275,10 +275,16 @@ puppet apply --modulepath $MODULEPATH -e "${hiera_config}"
 # Create a shell script that installs a CollectionSpace server instance.
 
 echo "Creating installer script ..."
-current_dir=`pwd`
+BIN_DIRECTORY='/usr/local/bin'
+if [ -d "$BIN_DIRECTORY" ]; then
+  installer_script_dir=$BIN_DIRECTORY
+else
+  installer_script_dir=$PUPPETPATH
+fi
 installer_script_filename='install_collectionspace.sh'
+installer_script_path="${installer_script_dir}/${installer_script_filename}"
 installer_file_resource="file { 'Creating installer script file': "
-installer_file_resource+="  path    => '${current_dir}/${installer_script_filename}', "
+installer_file_resource+="  path    => '${installer_script_path}', "
 installer_file_resource+="  content => \"#!/bin/bash\nsudo puppet apply ${MODULEPATH}/puppet/manifests/site.pp\", "
 installer_file_resource+="  mode    => '744', "
 installer_file_resource+="} "
@@ -294,17 +300,17 @@ read -p "Install your CollectionSpace server now [y/n]?" choice
 case "$choice" in 
   y|Y )
     echo "Starting installation ..."
-    if [[ -x "$installer_script_filename" ]]; then
-      sudo "${current_dir}/${installer_script_filename}"
+    if [ -x "$installer_script_path" ]; then
+      sudo $installer_script_path
     else
-      echo "sudo puppet apply ${MODULEPATH}/puppet/manifests/site.pp"
+      sudo puppet apply $MODULEPATH/puppet/manifests/site.pp
     fi
   ;;
   * )
     echo -e "\n"
     echo "You can later install your CollectionSpace server by entering the command:"
-    if [[ -x "$installer_script_filename" ]]; then
-      echo "sudo ${current_dir}/${installer_script_filename}"
+    if [ -x $installer_script_path ]; then
+      echo "sudo $installer_script_path"
     else
       echo "sudo puppet apply ${MODULEPATH}/puppet/manifests/site.pp"
     fi
