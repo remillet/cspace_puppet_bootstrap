@@ -175,7 +175,7 @@ for module in ${MODULES[*]}
       mv $module $moved_old_module_name
       echo "Backed up existing module to $moved_old_module_name ..."
     fi
-    echo "Renaming CollectionSpace module directory ..."
+    echo "Renaming module directory ..."
     mv "${module}${GITHUB_ARCHIVE_MASTER_SUFFIX}" $module
     let MODULE_COUNTER++
   done
