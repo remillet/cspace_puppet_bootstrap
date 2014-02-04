@@ -266,7 +266,7 @@ puppet apply --modulepath $MODULEPATH -e "${ordering_ini_resource}"
 
 echo "Creating default Hiera configuration file ..."
 hiera_config="file { 'Hiera config':"
-hiera_config+="  path => '${PUPPETPATH}/hiera.yaml', "
+hiera_config+="  path    => '${PUPPETPATH}/hiera.yaml', "
 hiera_config+="  content => '---', "
 hiera_config+="} "
 
@@ -294,7 +294,7 @@ puppet apply --modulepath $MODULEPATH -e "${installer_file_resource}"
 echo "--------------------------------------------------------------------------"
 echo -e "\n"
 echo "Congratulations!"
-echo "All prerequisites for a CollectionSpace server were successfully installed."
+echo "Initial prerequisites for a CollectionSpace server were successfully installed.."
 echo -e "\n"
 read -p "Install your CollectionSpace server now [y/n]?" choice
 case "$choice" in 
