@@ -213,8 +213,10 @@ for pf_module in ${PF_MODULES[*]}
 #
 # For an alternative workaround for this issue, see:
 # https://github.com/puppetlabs/puppetlabs-postgresql/issues/348
-
-sudo puppet module install --force --version 1.0.0 puppetlabs-concat
+#
+# NOTE: This no longer appears to be needed, after changes in
+# puppetlabs-postgresql version 3.2.
+# sudo puppet module install --force --version 1.0.0 puppetlabs-concat
   
 # Set the Puppet modulepath in the main Puppet configuration file (an INI-style file)
 # by invoking the 'ini_setting' resource in the 'puppetlabs-inifile' module.
@@ -283,9 +285,12 @@ else
 fi
 installer_script_filename='install_collectionspace.sh'
 installer_script_path="${installer_script_dir}/${installer_script_filename}"
+installer_script_contents="/bin/bash\n"
+installer_script_contents+="sudo puppet apply ${MODULEPATH}/puppet/manifests/site.pp\n"
+installer_script_contents+="sudo puppet apply ${MODULEPATH}/puppet/manifests/post-java.pp\n"
 installer_file_resource="file { 'Creating installer script file': "
 installer_file_resource+="  path    => '${installer_script_path}', "
-installer_file_resource+="  content => \"#!/bin/bash\nsudo puppet apply ${MODULEPATH}/puppet/manifests/site.pp\", "
+installer_file_resource+="  content => \"#!${installer_script_contents}\", "
 installer_file_resource+="  mode    => '744', "
 installer_file_resource+="} "
 
@@ -304,6 +309,12 @@ case "$choice" in
       sudo $installer_script_path
     else
       sudo puppet apply $MODULEPATH/puppet/manifests/site.pp
+      EXIT_STATUS=$?
+      if [ $EXIT_STATUS eq 0 ]; then
+        sudo puppet apply $MODULEPATH/puppet/manifests/post-java.pp
+      else
+        echo "Installation of the CollectionSpace server failed: see output for details."
+      fi
     fi
   ;;
   * )
@@ -313,6 +324,8 @@ case "$choice" in
       echo "sudo $installer_script_path"
     else
       echo "sudo puppet apply ${MODULEPATH}/puppet/manifests/site.pp"
+      echo "... and then the command ..."
+      echo "sudo puppet apply ${MODULEPATH}/puppet/manifests/post-java.pp"
     fi
   ;;
 esac
