@@ -13,6 +13,25 @@ if [ "$EUID" -ne "0" ]; then
   exit 1
 fi
 
+# If the user provides a '-y' option to this script, the script
+# will run entirely unattended. Otherwise, the user will later be
+# queried as to whether they want to proceed with the installation,
+# after the bootstrapping part of the script concludes successfully.
+
+SCRIPT_RUNS_UNATTENDED=false
+while getopts ":y" opt; do
+  case $opt in
+    # A '-y' option was entered on the command line.
+    y)
+      SCRIPT_RUNS_UNATTENDED=true
+      ;;
+    \?)
+      # if any other command line options are supplied,
+      # ignore them.
+      ;;
+  esac
+done
+
 # Verify that either the 'wget' or 'curl' executable file
 # exists and is in the current PATH.
 
@@ -89,6 +108,7 @@ fi
 # Maintain the SHA-1 hash of a vetted commit of this file here.
 # (Using 'master' instead of a specific commit makes downloading and running
 # this script subject to security vulnerabilities and newly-introduced bugs.)
+
 PUPPET_INSTALL_COMMIT='3e7bae89c0ea1d422ad571800e5f4235912af107' # Latest commit on a branch as of 2014-01-27
 PUPPET_INSTALL_GITHUB_PATH="https://raw.github.com/danieldreier/vagrant-template/${PUPPET_INSTALL_COMMIT}/provision"
 PUPPET_INSTALL_SCRIPT_NAME='install_puppet.sh'
@@ -169,7 +189,7 @@ for module in ${MODULES[*]}
     # GitHub's master branch ZIP archives, when exploded to a directory,
     # have a '-master' suffix that must be removed.
     # When doing this renaming, first rename any existing directory
-    # with the target name to avoid collisions.
+    # that might cause a name collision when that suffix is removed.
     if [ -d "${module}" ]; then
       moved_old_module_name=`mktemp -t -d ${module}.XXXXX` || exit 1
       mv $module $moved_old_module_name
@@ -301,32 +321,49 @@ echo -e "\n"
 echo "Congratulations!"
 echo "Initial prerequisites for a CollectionSpace server were successfully installed.."
 echo -e "\n"
-read -p "Install your CollectionSpace server now [y/n]?" choice
-case "$choice" in 
-  y|Y )
-    echo "Starting installation ..."
-    if [ -x "$installer_script_path" ]; then
-      sudo $installer_script_path
-    else
-      sudo puppet apply $MODULEPATH/puppet/manifests/site.pp
-      EXIT_STATUS=$?
-      if [ $EXIT_STATUS eq 0 ]; then
-        sudo puppet apply $MODULEPATH/puppet/manifests/post-java.pp
+
+# Depending on whether the '-y' flag was entered as a command line option when
+# this script was executed, either ask the user whether they wish to proceed with
+# the installation (if no '-y' flag), or just proceed without asking (if '-y' flag).
+
+if [ $SCRIPT_RUNS_UNATTENDED == false ]; then
+  read -p "Install your CollectionSpace server now [y/n]?" choice
+  case "$choice" in
+    # The user has entered a 'y' or 'Y' at the prompt, signifying they want
+    # to continue the installation.
+    # (This avoids redundant code by setting a flag, then falling through
+    # to the next 'if' block below.)
+    y|Y )
+      SCRIPT_RUNS_UNATTENDED=true
+    ;;
+    # The user has entered any other value at the prompt, signifying they
+    # do not want to continue the installation at this time.
+    * )
+      echo -e "\n"
+      echo "You can later install your CollectionSpace server by entering the command:"
+      if [ -x $installer_script_path ]; then
+        echo "sudo $installer_script_path"
       else
-        echo "Installation of the CollectionSpace server failed: see output for details."
+        echo "sudo puppet apply ${MODULEPATH}/puppet/manifests/site.pp"
+        echo "... and then the command ..."
+        echo "sudo puppet apply ${MODULEPATH}/puppet/manifests/post-java.pp"
       fi
-    fi
-  ;;
-  * )
-    echo -e "\n"
-    echo "You can later install your CollectionSpace server by entering the command:"
-    if [ -x $installer_script_path ]; then
-      echo "sudo $installer_script_path"
+    ;;
+  esac
+fi
+
+if [ $SCRIPT_RUNS_UNATTENDED == true ]; then
+  echo "Starting installation ..."
+  if [ -x "$installer_script_path" ]; then
+    sudo $installer_script_path
+  else
+    sudo puppet apply $MODULEPATH/puppet/manifests/site.pp
+    EXIT_STATUS=$?
+    if [ $EXIT_STATUS eq 0 ]; then
+      sudo puppet apply $MODULEPATH/puppet/manifests/post-java.pp
     else
-      echo "sudo puppet apply ${MODULEPATH}/puppet/manifests/site.pp"
-      echo "... and then the command ..."
-      echo "sudo puppet apply ${MODULEPATH}/puppet/manifests/post-java.pp"
+      echo "Installation of the CollectionSpace server failed: see output for details."
     fi
-  ;;
-esac
+  fi
+fi
 
