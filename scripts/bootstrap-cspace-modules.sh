@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # bootstrap-cspace-modules.sh
 #
@@ -6,6 +6,9 @@
 # to install the CollectionSpace Puppet modules and their dependencies.
 
 # This script must be run as 'root' (e.g. via 'sudo')
+
+# Uncomment the following line for verbose output, useful when debugging
+# set -x
 
 SCRIPT_NAME=`basename $0` # Note: script name may be misleading if script is symlinked
 if [ "$EUID" -ne "0" ]; then
@@ -222,22 +225,42 @@ for pf_module in ${PF_MODULES[*]}
     let PF_COUNTER++
   done
   
-# Temporary workaround for issue where postgresql::server::pg_hba_rule in
-# puppetlabs-postgresql version 3.2.0 has not yet been upgraded for
-# changes in puppetlabs-concat 1.1.0 and later, including changes to
-# default owner and group values, and thus generating deprecation warnings.
-# 
-# As well, the new behavior requires that a 'postgres' user exist before
-# the pg_hba.conf file is written to, and that resource ordering has so
-# far proven challenging without introducing cyclic dependencies.
+# The following function needs to be declared before the code
+# which calls it.
 #
-# For an alternative workaround for this issue, see:
-# https://github.com/puppetlabs/puppetlabs-postgresql/issues/348
+# Compare two 'dotted' version numbers (e.g. 1.9, 1.8.22, etc.)
+# Returns the result in a global variable:
+# version_equals_or_exceeds_check
+# Returns 0 if supplied version is >= than checked-for version.
+# Returns 1 if checked-for version is greater.
+# Echoes versions, one per line, deleting blank lines, if any.
+# Then sorts with '-t.', specifying that the dot character (.)
+# is used as a field separator, and sorting respectively on the
+# first four fields of the dotted version number, via 'nr', thus
+# performing a reverse numeric sort, so that the highest version
+# number appears on line 1 of the output.
 #
-# NOTE: This no longer appears to be needed, after changes in
-# puppetlabs-postgresql version 3.2.
-# sudo puppet module install --force --version 1.0.0 puppetlabs-concat
-  
+# Based on aspects of this approach (as modified by reader comment):
+# http://fitnr.com/bash-comparing-version-strings.html#comment-221464671
+# and this one, as well:
+# http://stackoverflow.com/a/4495368
+#
+# TODO: Consider returning just true and false values, and revising the
+# invocations of this function accordingly.
+check_version()
+{
+    local version_supplied=$1 version_checked=$2
+    local winner=$(echo -e "$version_supplied\n$version_checked" \
+      | sed '/^$/d' \
+      | sort -t. -k 1,1nr -k 2,2nr -k 3,3nr -k 4,4nr \
+      | head -1)
+    if [[ $version_supplied == $winner ]] ; then
+        version_equals_or_exceeds_checked_version=true
+    else
+        version_equals_or_exceeds_checked_version=false
+    fi
+}
+
 # Set the Puppet modulepath in the main Puppet configuration file (an INI-style file)
 # by invoking the 'ini_setting' resource in the 'puppetlabs-inifile' module.
 #
@@ -245,13 +268,33 @@ for pf_module in ${PF_MODULES[*]}
 # within single-quotes is done here in 'bash'; that would not be performed in Puppet.)
 
 echo "Setting 'modulepath' in the main Puppet configuration file ..."
-PUPPETPATH='/etc/puppet'
-MODULEPATH="${PUPPETPATH}/modules"
-modulepath_ini_resource="ini_setting { 'Set modulepath in puppet.conf': "
-modulepath_ini_resource+="  path    => '${PUPPETPATH}/puppet.conf', "
+# Physical path to Puppet's configuration directory.
+# The path below is for a standalone, non-Puppet Enterprise deployment of Puppet.
+# For documentation on this configuration directory and its system-specific locations, see:
+# http://docs.puppetlabs.com/puppet/latest/reference/dirs_confdir.html 
+PUPPET_CONFIG_PATH='/etc/puppet'
+# Variable holding the path to Puppet's configuration directory, used in its own
+# configuration files.
+PUPPET_CONFIG_VAR='$confdir' # The '$' is a literal character in this context
+MODULES_DIRECTORY_NAME='modules'
+# In Puppet 3.5, the 'basemodulepath' setting effectively replaced the
+# 'modulepath' setting for identifying the path to Puppet's default
+# modules directory. As a result, we will need to set 'modulepath' in
+# Puppet <= 3.4 and 'basemodulepath' in Puppet >= 3.5.
+BASEMODULEPATH_INTRODUCED_IN=3.5
+PUPPET_VERSION=`puppet --version`
+check_version $PUPPET_VERSION $BASEMODULEPATH_INTRODUCED_IN
+if $version_equals_or_exceeds_checked_version ; then
+  MODULE_PATH_SETTING_NAME='basemodulepath'
+else
+  MODULE_PATH_SETTING_NAME='modulepath'
+fi
+
+modulepath_ini_resource="ini_setting { 'Set basemodulepath or modulepath in puppet.conf': "
+modulepath_ini_resource+="  path    => '${PUPPET_CONFIG_PATH}/puppet.conf', "
 modulepath_ini_resource+="  section => 'main', "
-modulepath_ini_resource+="  setting => 'modulepath', "
-modulepath_ini_resource+="  value   => '${MODULEPATH}', "
+modulepath_ini_resource+="  setting => '${MODULE_PATH_SETTING_NAME}', "
+modulepath_ini_resource+="  value   => '${PUPPET_CONFIG_VAR}/${MODULES_DIRECTORY_NAME}', "
 modulepath_ini_resource+="  ensure  => 'present', "
 modulepath_ini_resource+="} "
 
