@@ -113,7 +113,7 @@ fi
 # this script subject to security vulnerabilities and newly-introduced bugs.)
 
 PUPPET_INSTALL_COMMIT='557c6bfe1dba1cf6f4491fed0b0628ecd6bdf7a4' # Latest commit on a branch as of 2014-02-19
-PUPPET_INSTALL_GITHUB_PATH="https://raw.github.com/danieldreier/vagrant-template/${PUPPET_INSTALL_COMMIT}/provision"
+PUPPET_INSTALL_GITHUB_PATH="https://raw.githubusercontent.com/danieldreier/vagrant-template/${PUPPET_INSTALL_COMMIT}/provision"
 PUPPET_INSTALL_SCRIPT_NAME='install_puppet.sh'
 
 if [ ! -e ./$PUPPET_INSTALL_SCRIPT_NAME ]; then
