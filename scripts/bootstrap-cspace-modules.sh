@@ -10,6 +10,7 @@
 # Uncomment the following line for verbose output, useful when debugging
 # set -x
 
+PUPPET_OPTS='-v'
 SCRIPT_NAME=`basename $0` # Note: script name may be misleading if script is symlinked
 if [ "$EUID" -ne "0" ]; then
   echo "${SCRIPT_NAME}: This script must be run as root (e.g. via 'sudo') ..."
@@ -298,7 +299,7 @@ modulepath_ini_resource+="  value   => '${PUPPET_CONFIG_VAR}/${MODULES_DIRECTORY
 modulepath_ini_resource+="  ensure  => 'present', "
 modulepath_ini_resource+="} "
 
-puppet apply --modulepath $MODULEPATH -e "${modulepath_ini_resource}"
+puppet apply ${PUPPET_OPTS} --modulepath $MODULEPATH -e "${modulepath_ini_resource}"
 
 # Enable random ordering of unrelated resources on each run,
 # in a manner similar to the above.
@@ -314,7 +315,7 @@ ordering_ini_resource+="  value   => 'random', "
 ordering_ini_resource+="  ensure  => 'present', "
 ordering_ini_resource+="} "
 
-puppet apply --modulepath $MODULEPATH -e "${ordering_ini_resource}"
+puppet apply ${PUPPET_OPTS} --modulepath $MODULEPATH -e "${ordering_ini_resource}"
 
 # Create a default (initially minimal) Hiera configuration file.
 #
@@ -335,7 +336,7 @@ hiera_config+="  path    => '${PUPPETPATH}/hiera.yaml', "
 hiera_config+="  content => '---', "
 hiera_config+="} "
 
-puppet apply --modulepath $MODULEPATH -e "${hiera_config}"
+puppet apply ${PUPPET_OPTS} --modulepath $MODULEPATH -e "${hiera_config}"
 
 # Create a shell script that installs a CollectionSpace server instance.
 
@@ -349,15 +350,15 @@ fi
 installer_script_filename='install_collectionspace.sh'
 installer_script_path="${installer_script_dir}/${installer_script_filename}"
 installer_script_contents="/bin/bash\n"
-installer_script_contents+="sudo puppet apply ${MODULEPATH}/puppet/manifests/site.pp\n"
-installer_script_contents+="sudo puppet apply ${MODULEPATH}/puppet/manifests/post-java.pp\n"
+installer_script_contents+="sudo puppet apply ${PUPPET_OPTS} ${MODULEPATH}/puppet/manifests/site.pp\n"
+installer_script_contents+="sudo puppet apply ${PUPPET_OPTS} ${MODULEPATH}/puppet/manifests/post-java.pp\n"
 installer_file_resource="file { 'Creating installer script file': "
 installer_file_resource+="  path    => '${installer_script_path}', "
 installer_file_resource+="  content => \"#!${installer_script_contents}\", "
 installer_file_resource+="  mode    => '744', "
 installer_file_resource+="} "
 
-puppet apply --modulepath $MODULEPATH -e "${installer_file_resource}"
+puppet apply ${PUPPET_OPTS} --modulepath $MODULEPATH -e "${installer_file_resource}"
 
 echo "--------------------------------------------------------------------------"
 echo -e "\n"
@@ -387,9 +388,9 @@ if [ $SCRIPT_RUNS_UNATTENDED == false ]; then
       if [ -x $installer_script_path ]; then
         echo "sudo $installer_script_path"
       else
-        echo "sudo puppet apply ${MODULEPATH}/puppet/manifests/site.pp"
+        echo "sudo puppet apply ${PUPPET_OPTS} ${MODULEPATH}/puppet/manifests/site.pp"
         echo "... and then the command ..."
-        echo "sudo puppet apply ${MODULEPATH}/puppet/manifests/post-java.pp"
+        echo "sudo puppet apply ${PUPPET_OPTS} ${MODULEPATH}/puppet/manifests/post-java.pp"
       fi
     ;;
   esac
@@ -400,10 +401,10 @@ if [ $SCRIPT_RUNS_UNATTENDED == true ]; then
   if [ -x "$installer_script_path" ]; then
     sudo $installer_script_path
   else
-    sudo puppet apply $MODULEPATH/puppet/manifests/site.pp
+    sudo puppet apply ${PUPPET_OPTS} $MODULEPATH/puppet/manifests/site.pp
     EXIT_STATUS=$?
     if [ $EXIT_STATUS eq 0 ]; then
-      sudo puppet apply $MODULEPATH/puppet/manifests/post-java.pp
+      sudo puppet apply ${PUPPET_OPTS} $MODULEPATH/puppet/manifests/post-java.pp
     else
       echo "Installation of the CollectionSpace server failed: see output for details."
     fi
